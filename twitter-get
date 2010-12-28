@@ -1,0 +1,29 @@
+#!/bin/bash -e
+if [ "$#" == 0 ]; then echo "The twitter URI argument is expected" > /dev/stderr; exit 1; fi
+url="/1/$1.json"
+shift
+LOG=/var/log/twitter.log
+sep='?'
+while true; do
+  case "$1" in
+    *=*)
+      url="$url$sep$1"
+      sep='&'
+      shift;;
+    *)
+      break
+  esac
+done
+if [ -w "$LOG" ]; then
+  echo $(date +'%FT%H:%M:%SZ'): GET: "$url" "$@" >> "$LOG"
+fi
+TMP=$(mktemp)
+twurl "$url" "$@" >"$TMP"
+case "$(head -c 1 "$TMP")" in
+  '<'|'')
+    rm "$TMP"
+    exit 1;;
+  *)
+    cat "$TMP"
+    rm "$TMP";;
+esac

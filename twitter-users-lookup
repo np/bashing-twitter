@@ -1,0 +1,9 @@
+#!/bin/bash -e
+users="$1"
+if [ -z "$users" ]; then echo "a comma separated list of users is expected as argument" > /dev/stderr; exit 1; fi
+shift
+case "$users" in
+  [0-9]*) meth=user_id;;
+  *)      meth=screen_name;;
+esac
+twitter-get users/lookup "$meth=$users" "$@"

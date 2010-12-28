@@ -1,0 +1,30 @@
+#!/bin/bash -e
+field="$1"
+if [ -z "$field" ]; then echo "The non-cursor field name argument is expected" > /dev/stderr; exit 1; fi
+shift
+if [ $# = 0 ]; then echo "The command to run is expected" > /dev/stderr; exit 1; fi
+LOG=/var/log/twitter.log
+[ -w "$LOG" ] || log "\`$LOG' not writable, using stderr instead" && LOG=/dev/stderr
+log(){
+  echo $(date +'%FT%TZ'): twitter-with-cursor: "$@" >> "$LOG"
+}
+cmd=("$@")
+TMP1=$(mktemp)
+
+cursor=-1
+
+step(){
+  "${cmd[@]}" "cursor=$cursor" > "$TMP1"
+  cursor=$(json-select '/"next_cursor"' < "$TMP1")
+  log "next_cursor: $cursor"
+  json-'select' /\""$field"\" 2>/dev/null < "$TMP1"
+  rm -f "$TMP1"
+}
+
+echo '['
+step -1
+while [ "$cursor" != 0 ]; do
+  echo ','
+  step "$cursor"
+done
+echo ']'

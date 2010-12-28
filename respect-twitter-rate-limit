@@ -1,0 +1,29 @@
+#!/bin/bash -e
+if [ "$#" == 0 ]; then echo "The lower threshold argument is expected" > /dev/stderr; exit 1; fi
+thresholdLO="$1"
+shift
+if [ "$#" == 0 ]; then echo "The upper threshold argument is expected" > /dev/stderr; exit 1; fi
+thresholdHI="$1"
+shift
+LOG=/var/log/twitter.log
+[ -w "$LOG" ] || LOG=/dev/stderr
+getrate(){
+  twitter-rate-limit | json-'select' '/"remaining_hits"'
+}
+log(){
+  echo $(date +'%FT%TZ'): respect-twitter-rate-limit: "$@" >> "$LOG"
+}
+rate=$(getrate)
+if [ $rate -gt $thresholdLO ]; then
+  log "OK: $rate"
+  exec "$@"
+fi
+
+log "Too low: $rate"
+while [ $rate -lt $thresholdHI ]; do
+  log "Waiting 10min..."
+  sleep 10m
+  rate=$(getrate)
+done
+log "OK: $rate"
+exec "$@"

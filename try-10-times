@@ -1,0 +1,27 @@
+#!/bin/bash -e
+
+# setup logging
+LOG=/var/log/twitter.log
+[ -w "$LOG" ] || LOG=/dev/stderr
+log(){
+  echo $(date +'%FT%TZ'): try-10-times: "$@" >> "$LOG"
+}
+
+TMPOUT=$(mktemp)
+TMPERR=$(mktemp)
+for i in 1 2 3 4 5 6 7 8 9 ; do
+  if "$@" >"$TMPOUT" 2>"$TMPERR"; then
+    cat "$TMPOUT"
+    if [ -w /dev/stderr ]; then
+      cat "$TMPERR" >>/dev/stderr
+    else
+      log "WARNING: no write access to /dev/stderr"
+    fi
+    rm "$TMPOUT" "$TMPERR"
+    exit 0
+  else
+    sleep 1m
+  fi
+done
+rm "$TMPOUT" "$TMPERR"
+exec "$@"

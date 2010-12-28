@@ -1,0 +1,29 @@
+#!/bin/bash -e
+
+all=0
+while true; do
+  case "$1" in
+    -a|--all)
+      shift
+      all=1
+      ;;
+    *) break
+  esac
+done
+
+user="$1"
+if [ -z "$user" ]; then echo "user argument expected" > /dev/stderr; exit 1; fi
+shift
+
+url=statuses/user_timeline/"$user"
+
+if [ "$all" == 1 ]; then
+  statuses_count=$(twitter-user "$user" | json-select '/"statuses_count"')
+  page_count=$(( ($statuses_count / 200) + 1))
+  twitter-get-pages $page_count                    \
+    try-10-times                                   \
+      respect-twitter-rate-limit 50 100            \
+        twitter-get "$url" 'count=200' "$@"
+else
+  twitter-get "$url" 'count=200' "$@"
+fi

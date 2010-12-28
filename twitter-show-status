@@ -1,0 +1,5 @@
+#!/bin/bash -e
+id="$1"
+if [ -z "$id" ]; then echo "id argument expected" > /dev/stderr; exit 1; fi
+shift
+twitter-get statuses/show/"$id" "$@"

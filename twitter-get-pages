@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ $# = 0 ]; then echo "The page count is expected" > /dev/stderr; exit 1; fi
+page_count=$(( $1 ))
+shift
+
+if [ $# = 0 ]; then echo "The command to run is expected" > /dev/stderr; exit 1; fi
+
+echo '['
+"$@" page=1
+page=2
+while [ $page -le $page_count ]; do
+  echo ','
+  "$@" page=$page
+  page=$(($page + 1))
+done
+echo ']'

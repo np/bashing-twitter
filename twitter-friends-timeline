@@ -1,0 +1,2 @@
+#!/bin/bash -e
+twitter-get statuses/friends_timeline count=200 "$@"

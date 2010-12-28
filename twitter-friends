@@ -1,0 +1,59 @@
+#!/bin/bash -e
+meth=friends
+all=0
+field=users
+while true; do
+  case "$1" in
+    -f|--followers)
+      shift
+      meth=followers
+      ;;
+    -i|--ids)
+      shift
+      field=ids
+      ;;
+    -a|--all)
+      shift
+      all=1
+      ;;
+    --) shift ; break;;
+    *) break
+  esac
+done
+
+if [ "$field" == 'ids' ]; then
+  url="$meth/ids"
+else
+  url="statuses/$meth"
+fi
+
+while true; do
+  case "$1" in
+    *=*)
+      attrs=("${attrs[@]}" "$1")
+      shift
+      ;;
+    "") break;;
+    *)
+      user="$1"
+      url="$url/$user"
+      shift
+      break
+  esac
+done
+
+args=("$url" "${attrs[@]}" "$@")
+
+if [ "$all" == 1 ]; then
+  # This try-10-times is here for
+  # cases where the twitter-get fails,
+  # we suppose our request was correct
+  # (the cursor).
+  twitter-with-cursor "$field"         \
+    try-10-times                       \
+      respect-twitter-rate-limit 50 60 \
+        twitter-get "${args[@]}"       \
+  | json-concat
+else
+  twitter-get "${args[@]}"
+fi

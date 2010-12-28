@@ -1,0 +1,2 @@
+#!/bin/bash -e
+twitter-get statuses/retweeted_by_me count=200 "$@"

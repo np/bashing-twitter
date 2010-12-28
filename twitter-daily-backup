@@ -1,0 +1,53 @@
+#!/bin/bash
+# vim: nospell
+
+error(){
+  local code="$1"
+  shift
+  echo "$@" >>/dev/stderr
+  exit "$code"
+}
+
+insist(){
+  try-10-times "$@"
+}
+
+# Setup
+y=$(date +%Y)
+d=$(date +%Y-%m-%d)
+DIR=/var/spool/twitter
+HOURLY="$DIR/hourly-backup"
+DAILY="$DIR/daily-backup/$y/$d"
+CONF=$HOME/.bashing-twitter
+[ -e "$CONF" ] || error 1 "\`$CONF' should exists"
+. "$CONF"
+[ -n "$FROM" ] || error 1 "\`$CONF' should define FROM"
+[ -n "$TO" ]   || error 1 "\`$CONF' should define TO"
+
+# Main work
+mkdir -p "$DAILY"
+cat "$HOURLY/${d}"_*.yaml \
+  | sort -u > "$DAILY/timeline.yaml"
+insist twitter-friends -a -f > "$DAILY/followers.json"
+insist twitter-friends -a    > "$DAILY/friends.json"
+# TODO: when we get over 100...
+twitter-mentions      > "$DAILY/mentions.json"
+for b in followers friends mentions; do
+  yamlize-root < "$DAILY/$b.json" > "$DAILY/$b.yaml" && rm "$DAILY/$b.json"
+done
+
+# Sending report
+(
+  cat <<EOS
+From: $FROM
+To: $TO
+Subject: ${SUBJECT:-"Twitter Daily Backup on $(hostname) at ${d}"}
+${HEADERS:-}
+
+EOS
+  wc -l "$HOURLY/${d}"_*.yaml
+  wc -l "$DAILY/timeline.yaml"
+  wc -l "$DAILY/followers.yaml"
+  wc -l "$DAILY/friends.yaml"
+  wc -l "$DAILY/mentions.yaml"
+) | msmtp --read-recipients --read-envelope-from

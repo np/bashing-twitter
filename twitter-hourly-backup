@@ -1,0 +1,8 @@
+#!/bin/bash -e
+b=/var/spool/twitter/hourly-backup/$(date +%Y-%m-%d_%H)
+try-10-times                       \
+  respect-twitter-rate-limit 50 60 \
+    twitter-friends-timeline       \
+ > "$b".json
+yamlize-root < "$b".json > "$b".yaml
+rm "$b".json

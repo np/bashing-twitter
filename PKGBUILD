@@ -1,10 +1,10 @@
 # Contributor: Nicolas Pouillard <nicolas.pouillard@gmail.com>
 pkgname=bashing-twitter
 pkgver=0.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Twitter tools written in bash"
 arch=('any')
-url=''
+url='https://github.com/np/bashing-twitter'
 license=('custom')
 depends=('bash') # 'json-tools' 'twurl' ...)
 source=(

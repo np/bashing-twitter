@@ -1,16 +1,23 @@
-#!/bin/bash
+#!/bin/bash -e
 
-if [ $# = 0 ]; then echo "The page count is expected" > /dev/stderr; exit 1; fi
+error(){
+  local code="$1"
+  shift
+  echo "$@" >>/dev/stderr
+  exit "$code"
+}
+
+[ $# != 0 ] || error 1 "The page count is expected"
 page_count=$(( $1 ))
 shift
 
-if [ $# = 0 ]; then echo "The command to run is expected" > /dev/stderr; exit 1; fi
+[ $# != 0 ] || error 1 "The command to run is expected"
 
-echo '['
+echo -n '['
 "$@" page=1
 page=2
 while [ $page -le $page_count ]; do
-  echo ','
+  echo -n ','
   "$@" page=$page
   page=$(($page + 1))
 done

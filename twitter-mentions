@@ -1,2 +1,2 @@
 #!/bin/bash -e
-twitter-get statuses/mentions count=200 "$@"
+exec twitter-get statuses/mentions count=200 "$@"

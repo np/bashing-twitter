@@ -6,4 +6,4 @@ case "$users" in
   [0-9]*) meth=user_id;;
   *)      meth=screen_name;;
 esac
-twitter-get users/lookup "$meth=$users" "$@"
+exec twitter-get users/lookup "$meth=$users" "$@"

@@ -1,2 +1,2 @@
 #!/bin/bash -e
-twitter-get account/rate_limit_status "$@"
+exec twitter-get account/rate_limit_status "$@"

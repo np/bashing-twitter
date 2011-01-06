@@ -25,5 +25,5 @@ if [ "$all" == 1 ]; then
       respect-twitter-rate-limit 50 100            \
         twitter-get "$url" 'count=200' "$@"
 else
-  twitter-get "$url" 'count=200' "$@"
+  exec twitter-get "$url" 'count=200' "$@"
 fi

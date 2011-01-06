@@ -55,5 +55,5 @@ if [ "$all" == 1 ]; then
         twitter-get "${args[@]}"       \
   | json-concat
 else
-  twitter-get "${args[@]}"
+  exec twitter-get "${args[@]}"
 fi

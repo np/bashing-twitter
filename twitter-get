@@ -1,8 +1,34 @@
 #!/bin/bash -e
-if [ "$#" == 0 ]; then echo "The twitter URI argument is expected" > /dev/stderr; exit 1; fi
-url="/1/$1.json"
+
+# setup logging
+LOG=/dev/stderr
+log(){
+  echo $(date +%FT%TZ): GET: "$@" >>"$LOG"
+}
+chlog(){
+  [ -w "$1" ] || log "\`$1' not writable, using stderr instead" && LOG="$1"
+}
+chlog /var/log/twitter.log
+
+error(){
+  local code="$1"
+  shift
+  echo "$@" >>/dev/stderr
+  exit "$code"
+}
+
+dryrun=${TWITTER_GET_DRYRUN:-0}
+while [ $# != 0 ]; do
+  case "$1" in
+    -n|--dry-run) shift; dryrun=1;;
+    -*) error 1 "Unexpected flag \`$1'";;
+    *) break;;
+  esac
+done
+
+[ $# != 0 ] || error 1 "The twitter URI argument is expected"
+url=/1/"$1".json
 shift
-LOG=/var/log/twitter.log
 sep='?'
 while true; do
   case "$1" in
@@ -10,20 +36,85 @@ while true; do
       url="$url$sep$1"
       sep='&'
       shift;;
+    -n|--dry-run) shift; dryrun=1;;
+    -*) error 1 "Unexpected flag \`$1'";;
     *)
       break
   esac
 done
-if [ -w "$LOG" ]; then
-  echo $(date +'%FT%H:%M:%SZ'): GET: "$url" "$@" >> "$LOG"
-fi
+log "$url" "$@"
 TMP=$(mktemp)
-twurl "$url" "$@" >"$TMP"
-case "$(head -c 1 "$TMP")" in
-  '<'|'')
-    rm "$TMP"
-    exit 1;;
-  *)
-    cat "$TMP"
-    rm "$TMP";;
-esac
+if (( dryrun )); then
+  case "$url" in
+    /1/account/rate_limit_status.json)
+      echo '{"remaining_hits":349}';;
+    /1/statuses/followers.json|/1/statuses/friends.json)
+      cat <<EOF
+[ {"status":{"id":14,"text":"bla"},"followers_count":3,"friends_count":56,"statuses_count":4,"screen_name":"foo","following":true}
+, {"status":{"id":15,"text":"blo"},"followers_count":7,"friends_count":20,"statuses_count":2,"screen_name":"bar","following":true}
+]
+EOF
+      ;;
+    /1/statuses/followers.json)
+      cat <<EOF
+[ {"status":{"id":14,"text":"bla"},"followers_count":3,"friends_count":56,"statuses_count":4,"screen_name":"foo","following":true}
+]
+EOF
+      ;;
+    /1/statuses/followers.json*)
+      cat <<EOF
+{"followers":
+  [ {"status":{"id":14,"text":"bla"},"followers_count":3,"friends_count":56,"statuses_count":4,"screen_name":"foo","following":true}]
+,"next_cursor": 0
+}
+EOF
+      ;;
+    /1/statuses/friends.json?cursor=-1)
+      cat <<EOF
+{"users":
+  [{"status":{"id":14,"text":"bla"},"followers_count":3,"friends_count":56,"statuses_count":4,"screen_name":"foo","following":true}]
+,"next_cursor": 42
+}
+EOF
+      ;;
+    /1/statuses/friends.json?cursor=42)
+      cat <<EOF
+{"users":
+  [{"status":{"id":15,"text":"blo"},"followers_count":7,"friends_count":20,"statuses_count":2,"screen_name":"bar","following":true}]
+,"next_cursor": 0
+}
+EOF
+      ;;
+    /1/statuses/friends_timeline.json*)
+      cat <<EOF
+[ {"user":{"screen_name":"foo","name":"Foo","id":1},"id":15,"text":"bla"}
+, {"user":{"screen_name":"bar","name":"Bar","id":2},"id":16,"text":"bla bla"}
+]
+EOF
+      ;;
+    /1/users/show/*.json*)
+      cat <<EOF
+{"screen_name":"me","name":"Me","id":3,"statuses_count":0}
+EOF
+      ;;
+    #/1/statuses/mentions.json*);;
+    #/1/statuses/retweeted_by_me.json*);;
+    #/1/statuses/retweeted_to_me.json*);;
+    #/1/statuses/retweets_of_me.json*);;
+    #/1/statuses/user_timeline/npouillard.json*);;
+    *) echo dryrun twurl "$url" "$@"
+  esac
+elif twurl "$url" "$@" >"$TMP"; then
+  case "$(head -c 1 "$TMP")" in
+    '<'|'')
+      rm "$TMP"
+      exit 1;;
+    *)
+      cat "$TMP"
+      rm "$TMP";;
+  esac
+else
+  code=$?
+  rm "$TMP"
+  exit $code
+fi

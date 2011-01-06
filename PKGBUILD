@@ -1,6 +1,6 @@
 # Contributor: Nicolas Pouillard <nicolas.pouillard@gmail.com>
 pkgname=bashing-twitter
-pkgver=0.2
+pkgver=0.3
 pkgrel=1
 pkgdesc="Twitter tools written in bash"
 arch=('any')
@@ -31,12 +31,12 @@ source=(
 sha256sums=('e90527e6e0d03f7cea8ce044a40dbec01d7655a403280689a0cd0474bede0130'
             '7ab5cfe9c4d9cbbdad45c112a214831a5b7fe48171950fe9e537f449dad23231'
             '32edb90289de9ff2f59d8aedf8503eec5fa9aa3d56886696c1940d18f1e0adee'
-            'fa611091a8b586373f56b312ea0cf66f5506eeb0166c6ff58b9d77083a083266'
+            '43bf0d3a566561a7f03b7fd9cdbba7cd19b8d7483f16e6bed65717b5c4e2d67b'
             'd388c9ab84f59950a7862b19e63ce8d1c9eccc4bd7f9bcf15e908467587458e2'
             '4adb7ef802d38d21ee94e44b9d71e67cb5967706cc210f6d0e732552b59816be'
             '73ad752fe5bd338cb23ba2f881a1e8d6983a42345628f8b2823e2b3c5b3c439e'
             '9a1bd82712ca6baa955e3b7ebf730e4a305e7a8f298ef72016b4ebccff8e7121'
-            'b3ed54e556d356d53e919819e7027bd32ef0f3717a14644b0f7feee2f4664d97'
+            'fdeee36519b51db2947e56735e056ac7a969d94559c2e117672c5c70939771f8'
             '1104a786c3211df599e2d4a0ffd11a56f5ba3400e316065cc1cc191fad18c5af'
             '1f1663d54ce192f4031480b56b7a513d300429d7ebdae29f6d9d3e1d32ef6257'
             '92b45d7da148e9cdfda58f7828408d30cb00944aa5192665c816e319d8352149'

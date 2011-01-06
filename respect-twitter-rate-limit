@@ -1,18 +1,35 @@
 #!/bin/bash -e
-if [ "$#" == 0 ]; then echo "The lower threshold argument is expected" > /dev/stderr; exit 1; fi
+
+me=$(basename $0)
+
+# setup logging
+LOG=/dev/stderr
+log(){
+  echo $(date +%FT%TZ): $me: "$@" >>"$LOG"
+}
+chlog(){
+  [ -w "$1" ] || log "\`$1' not writable, using stderr instead" && LOG="$1"
+}
+chlog /var/log/twitter.log
+
+error(){
+  local code="$1"
+  shift
+  echo "$@" >>/dev/stderr
+  exit "$code"
+}
+
+[ $# != 0 ] || error 1 "The lower threshold argument is expected"
 thresholdLO="$1"
 shift
-if [ "$#" == 0 ]; then echo "The upper threshold argument is expected" > /dev/stderr; exit 1; fi
+[ $# != 0 ] || error 1 "The upper threshold argument is expected"
 thresholdHI="$1"
 shift
-LOG=/var/log/twitter.log
-[ -w "$LOG" ] || LOG=/dev/stderr
+
 getrate(){
   twitter-rate-limit | json-'select' '/"remaining_hits"'
 }
-log(){
-  echo $(date +'%FT%TZ'): respect-twitter-rate-limit: "$@" >> "$LOG"
-}
+
 rate=$(getrate)
 if [ $rate -gt $thresholdLO ]; then
   log "OK: $rate"

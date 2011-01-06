@@ -12,6 +12,22 @@ insist(){
   try-10-times "$@"
 }
 
+
+mapM_(){
+  local cmd=( )
+  local doit=0
+  for arg; do
+    if ((doit)); then
+      "${cmd[@]}" "$arg"
+    elif [[ $arg = -- ]]; then
+      doit=1
+    else
+      cmd=("${cmd[@]}" "$arg")
+    fi
+  done
+}
+
+
 # Setup
 y=$(date +%Y)
 d=$(date +%Y-%m-%d)
@@ -26,15 +42,12 @@ CONF=$HOME/.bashing-twitter
 
 # Main work
 mkdir -p "$DAILY"
-cat "$HOURLY/${d}"_*.yaml \
-  | sort -u > "$DAILY/timeline.yaml"
+mapM_ json-lines -- "$HOURLY/${d}"_*.json | sort -u | json-unlines \
+  > "$DAILY/timeline.json"
 insist twitter-friends -a -f > "$DAILY/followers.json"
 insist twitter-friends -a    > "$DAILY/friends.json"
 # TODO: when we get over 100...
 twitter-mentions      > "$DAILY/mentions.json"
-for b in followers friends mentions; do
-  yamlize-root < "$DAILY/$b.json" > "$DAILY/$b.yaml" && rm "$DAILY/$b.json"
-done
 
 # Sending report
 (
@@ -45,9 +58,9 @@ Subject: ${SUBJECT:-"Twitter Daily Backup on $(hostname) at ${d}"}
 ${HEADERS:-}
 
 EOS
-  wc -l "$HOURLY/${d}"_*.yaml
-  wc -l "$DAILY/timeline.yaml"
-  wc -l "$DAILY/followers.yaml"
-  wc -l "$DAILY/friends.yaml"
-  wc -l "$DAILY/mentions.yaml"
+  wc -l "$HOURLY/${d}"_*.json
+  wc -l "$DAILY/timeline.json"
+  wc -l "$DAILY/followers.json"
+  wc -l "$DAILY/friends.json"
+  wc -l "$DAILY/mentions.json"
 ) | msmtp --read-recipients --read-envelope-from

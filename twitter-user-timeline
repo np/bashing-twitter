@@ -23,7 +23,8 @@ if [ "$all" == 1 ]; then
   twitter-get-pages $page_count                    \
     try-10-times                                   \
       respect-twitter-rate-limit 50 100            \
-        twitter-get "$url" 'count=200' "$@"
+        twitter-get "$url" 'count=200' "$@"        |
+    json-concat
 else
   exec twitter-get "$url" 'count=200' "$@"
 fi

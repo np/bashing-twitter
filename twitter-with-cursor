@@ -1,30 +1,43 @@
 #!/bin/bash -e
-field="$1"
-if [ -z "$field" ]; then echo "The non-cursor field name argument is expected" > /dev/stderr; exit 1; fi
-shift
-if [ $# = 0 ]; then echo "The command to run is expected" > /dev/stderr; exit 1; fi
-LOG=/var/log/twitter.log
-[ -w "$LOG" ] || log "\`$LOG' not writable, using stderr instead" && LOG=/dev/stderr
-log(){
-  echo $(date +'%FT%TZ'): twitter-with-cursor: "$@" >> "$LOG"
-}
-cmd=("$@")
-TMP1=$(mktemp)
 
+# setup logging
+LOG=/dev/stderr
+log(){
+  echo $(date +%FT%TZ): twitter-with-cursor: "$@" >>"$LOG"
+}
+chlog(){
+  [ -w "$1" ] || log "\`$1' not writable, using stderr instead" && LOG="$1"
+}
+chlog /var/log/twitter.log
+
+error(){
+  local code="$1"
+  shift
+  echo "$@" >>/dev/stderr
+  exit "$code"
+}
+
+field="$1"
+[ -n "$field" ] || error 1 "The non-cursor field name argument is expected"
+shift
+cmd=( "$@" )
+[ $# != 0 ] || error 1 "The command to run is expected"
+
+tmp=$(mktemp)
 cursor=-1
 
 step(){
-  "${cmd[@]}" "cursor=$cursor" > "$TMP1"
-  cursor=$(json-select '/"next_cursor"' < "$TMP1")
+  "${cmd[@]}" "cursor=$cursor" >"$tmp"
+  cursor=$(json-select '/"next_cursor"' <"$tmp")
   log "next_cursor: $cursor"
-  json-'select' /\""$field"\" 2>/dev/null < "$TMP1"
-  rm -f "$TMP1"
+  json-'select' /\""$field"\" 2>/dev/null <"$tmp"
+  rm -f "$tmp"
 }
 
-echo '['
-step -1
+echo -n '['
+step
 while [ "$cursor" != 0 ]; do
-  echo ','
-  step "$cursor"
+  echo -n ','
+  step
 done
 echo ']'

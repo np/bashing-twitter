@@ -12,7 +12,7 @@ while true; do
 done
 
 user="$1"
-if [ -z "$user" ]; then echo "user argument expected" > /dev/stderr; exit 1; fi
+if [ -z "$user" ]; then echo "user argument expected" >>/dev/stderr; exit 1; fi
 shift
 
 url=statuses/user_timeline/"$user"

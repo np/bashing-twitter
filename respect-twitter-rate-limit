@@ -27,7 +27,7 @@ thresholdHI="$1"
 shift
 
 getrate(){
-  twitter-rate-limit | json-'select' '/"remaining_hits"'
+  twitter-rate-limit | json-select '/"remaining_hits"'
 }
 
 rate=$(getrate)

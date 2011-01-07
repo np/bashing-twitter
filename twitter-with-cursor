@@ -30,7 +30,7 @@ step(){
   "${cmd[@]}" "cursor=$cursor" >"$tmp"
   cursor=$(json-select '/"next_cursor"' <"$tmp")
   log "next_cursor: $cursor"
-  json-'select' /\""$field"\" 2>/dev/null <"$tmp"
+  json-select /\""$field"\" 2>/dev/null <"$tmp"
   rm -f "$tmp"
 }
 

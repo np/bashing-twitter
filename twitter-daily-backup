@@ -12,6 +12,18 @@ insist(){
   try-10-times "$@"
 }
 
+wrap(){
+  local base="$1"
+  shift
+  "$@" >"$base".1line.json &&
+    json-wrap <"$base".1line.json >"$base".json
+  if [ -s "$base".json ]; then
+    [ ! -e "$base".1line.json ] || rm "$base".1line.json
+  else
+    [ -s "$base".1line.json ] || rm "$base".1line.json
+    rm "$base".json
+  fi
+}
 
 mapM_(){
   local cmd=( )
@@ -44,10 +56,10 @@ CONF=$HOME/.bashing-twitter
 mkdir -p "$DAILY"
 mapM_ json-lines -- "$HOURLY/${d}"_*.json | sort -u | json-unlines \
   > "$DAILY/timeline.json"
-insist twitter-friends -a -f > "$DAILY/followers.json"
-insist twitter-friends -a    > "$DAILY/friends.json"
+wrap "$DAILY"/followers insist twitter-friends -a -f
+wrap "$DAILY"/friends   insist twitter-friends -a
 # TODO: when we get over 100...
-twitter-mentions      > "$DAILY/mentions.json"
+wrap "$DAILY"/mentions  insist twitter-mentions
 
 # Sending report
 (

@@ -6,3 +6,4 @@ try-10-times                       \
  >"$b".1line.json
 json-wrap <"$b".1line.json >"$b".json
 rm "$b".1line.json
+[ -s "$b".json ] || rm "$b".json

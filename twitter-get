@@ -6,7 +6,11 @@ log(){
   echo $(date +%FT%TZ): GET: "$@" >>"$LOG"
 }
 chlog(){
-  [ -w "$1" ] || log "\`$1' not writable, using stderr instead" && LOG="$1"
+  if [ -w "$1" ]; then
+    LOG="$1"
+  else
+    log "\`$1' not writable, using stderr instead"
+  fi
 }
 chlog /var/log/twitter.log
 

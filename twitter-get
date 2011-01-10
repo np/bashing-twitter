@@ -116,7 +116,7 @@ elif twurl "$url" "$@" >"$TMP"; then
     *)
       # They send garbage from time to time, here we kill everything
       # from zero to space (excluded), except newlines and tabs.
-      tr -d '[\000-\010\013-\037]' < "$TMP"
+      tr -d '\000-\010\013-\037' < "$TMP"
       rm "$TMP";;
   esac
 else
